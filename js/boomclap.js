@@ -4,6 +4,7 @@ var templates = {};
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 var audioContext = new window.AudioContext();
+var hookups = {};
 
 document.onreadystatechange = function (e) {
     var state = document.readyState;
@@ -17,15 +18,19 @@ document.onreadystatechange = function (e) {
 function onDOMReady() {
     templates = getTemplates();
     loadTemplate('index');
-    setupWorker();
+    start();
+}
+
+function onContentReady() {
 }
 
 function getTemplates() {
     var tmp = {};
-    var templateTags = new Array(document.querySelector('script[type="text/html"]'));
-    templateTags.map(function (script) {
+    var elements = document.querySelectorAll('script[type="text/html"]');
+    for (var i=0 ; i < elements.length ; i++) {
+        var script = elements[i];
         tmp[script.id] = script.innerText;
-    });
+    }
     return tmp;
 }
 
@@ -35,17 +40,33 @@ function loadTemplate(id) {
         throw new Error('No such template ' + id);
     }
     document.body.innerHTML = html;
+    loadHookups();
 }
 
-function onContentReady() {
+function loadHookups() {
+    hookups = {};
+    var thingsWithIds = document.querySelectorAll('[id]');
+    var length = thingsWithIds.length;
+    while (length--) {
+        var thing = thingsWithIds[length];
+        hookups[thing.id] = thing;
+    }
 }
 
+function start() {
+    setupWorker();
+}
+
+function startPlayerUI() {
+    loadTemplate('player');
+}
 
 function setupWorker() {
     navigator.getUserMedia({audio: true}, gotStream);
 }
 
 function gotStream(stream) {
+    startPlayerUI();
     var source = audioContext.createMediaStreamSource(stream);
 
     var biquadFilter = audioContext.createBiquadFilter();
@@ -53,7 +74,8 @@ function gotStream(stream) {
     biquadFilter.frequency.value = 1000;
 
     var gainNode = audioContext.createGainNode();
-    var volumeSlider = document.getElementById('volume');
+    var volumeSlider = hookups['volume'];
+    volumeSlider.value = 100*gainNode.gain.value;
     volumeSlider.onchange = function () {
         gainNode.gain.value = volumeSlider.value / 100;
     };

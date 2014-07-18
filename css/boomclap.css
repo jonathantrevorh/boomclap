@@ -1,4 +1,21 @@
+body {
+    margin: 0;
+}
 
 .text-center {
     text-align: center;
+}
+
+.hidden {
+    display: none;
+}
+
+table.grid {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table.grid td {
+    height: 5em;
+    border: 1px solid rgba(0, 0, 0, 0.25);
 }
