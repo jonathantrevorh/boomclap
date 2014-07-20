@@ -61,9 +61,16 @@ function startPlayerUI() {
     loadTemplate('player');
 }
 
-function setupWorker() {
-    navigator.getUserMedia({audio: true}, gotStream);
-}
+var setupWorker = (function () {
+    // ensure getUserMedia is only called once
+    var requestSent = false;
+    return function () {
+        if (!requestSent) {
+            navigator.getUserMedia({audio: true}, gotStream);
+            requestSent = true;
+        }
+    }
+})();
 
 function gotStream(stream) {
     startPlayerUI();
