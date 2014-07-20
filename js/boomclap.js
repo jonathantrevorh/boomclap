@@ -87,18 +87,28 @@ function gotStream(stream) {
         gainNode.gain.value = volumeSlider.value / 100;
     };
 
-    var nodes = [];
-    nodes.push(source);
-    nodes.push(biquadFilter);
-    nodes.push(gainNode);
-    nodes.push(audioContext.destination);
-    wireUp(nodes);
+    var inspector = audioContext.createAnalyser();
+
+    wireUp([source, biquadFilter, gainNode, inspector, audioContext.destination]);
+
+    bootupInspector(inspector);
 }
 
 function wireUp(nodes) {
+    var src, dst;
     for (var i=0 ; i < nodes.length-1 ; i++) {
-        var src = nodes[i];
-        var dst = nodes[i+1];
+        src = nodes[i];
+        dst = nodes[i+1];
         src.connect(dst);
+    }
+    return dst;
+}
+
+function bootupInspector(inspector) {
+    setInterval(listenAndDump, 1000);
+    function listenAndDump() {
+        var frequencyData = new Uint8Array(inspector.frequencyBinCount);
+        var data = inspector.getByteFrequencyData(frequencyData);
+        console.log(data);
     }
 }
