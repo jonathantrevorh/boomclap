@@ -88,6 +88,7 @@ function gotStream(stream) {
     };
 
     var inspector = audioContext.createAnalyser();
+    inspector.smoothingTimeConstant = 0.1;
 
     wireUp([source, biquadFilter, gainNode, inspector, audioContext.destination]);
 
@@ -105,10 +106,41 @@ function wireUp(nodes) {
 }
 
 function bootupInspector(inspector) {
-    setInterval(listenAndDump, 1000);
+    //setInterval(listenAndDump, 10);
+    pump();
+    var freqData = new Float32Array(inspector.frequencyBinCount);
+    var rep = '';
     function listenAndDump() {
-        var frequencyData = new Uint8Array(inspector.frequencyBinCount);
-        var data = inspector.getByteFrequencyData(frequencyData);
-        console.log(data);
     }
+    function pump() {
+        inspector.getFloatFrequencyData(freqData);
+        rep = dump(freqData, inspector.minDecibels, inspector.maxDecibels);
+        hookups['dump'].innerText = rep;
+        requestAnimationFrame(pump);
+    }
+}
+
+// TODO make it easier to get fft data
+// ideally something like: createFft(minFreq, maxFreq, smoothing, nbuckets)
+
+function dump(data, min, max) {
+    if (data == null) return '';
+    var ss = '';
+    for (var i=0 ; i < data.length ; i++) {
+        var value = data[i];
+        ss += repeat('#', 50*normalize(value, min, max)) + "\n";
+    }
+    return ss;
+}
+
+function repeat(s, randomN) {
+    var ss = '';
+    var n = parseInt(randomN);
+    if (n < 0) return null;
+    while (n--) ss += s;
+    return ss;
+}
+function normalize(value, min, max) {
+    var normalized = (value - min) / (max - min);
+    return normalized;
 }
