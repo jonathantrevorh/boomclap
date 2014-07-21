@@ -87,12 +87,74 @@ function gotStream(stream) {
         gainNode.gain.value = volumeSlider.value / 100;
     };
 
-    var inspector = audioContext.createAnalyser();
-    inspector.smoothingTimeConstant = 0.1;
+    var input = wireUp([source, biquadFilter, gainNode]);
 
-    wireUp([source, biquadFilter, gainNode, inspector, audioContext.destination]);
+    var spool = new SampleSpooler(input, audioContext, 250);
 
-    bootupInspector(inspector);
+    var detector = new HitDetector(input, audioContext);
+    detector.onhit = function () {
+        var clampedSample = clampSample(spool.dumpContents());
+        registerSound(clampedSample);
+    }
+
+    wireUp([input, spool.processor, detector.inspector, audioContext.destination]);
+}
+
+/**
+ * SampleSpooler keeps track of spoolTime much samples from the source
+ * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
+ */
+function SampleSpooler(source, audioContext, spoolTime) {
+    this.bufferSize = 4096;
+    this.numChannels = 2;
+    var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
+    this.contentIndex = sampleCount - 1;
+    this.contents = new Array(sampleCount);
+    for (var i=0 ; i < sampleCount ; i++) {
+        this.contents[i] = 0;
+    }
+
+    // start listening to source
+    this.processor = audioContext.createScriptProcessor();
+    this.processor.onaudioprocess = this.onaudioprocess.bind(this);
+}
+SampleSpooler.prototype.onaudioprocess = function (e) {
+    console.log(e);
+}
+SampleSpooler.prototype.push = function (value) {
+    this.contents[this.contentIndex++] = value;
+    if (this.contentIndex > this.contents.length - 1) this.contentIndex = 0;
+}
+SampleSpooler.prototype.dumpContents = function () {
+    // get spooler state
+    var index = this.contentIndex;
+    var contents = this.contents.slice(0);
+    var total = contents.length;
+
+    // reorder data to start at 0, not index
+    var firstBits = contents.slice(index, total);
+    var lastBits = contents.slice(0, index);
+    var data = firstBits.concat(lastBits);
+    return data;
+}
+
+function HitDetector(source, audioContext) {
+    this.inspector = audioContext.createAnalyser();
+    this.inspector.smoothingTimeConstant = 0.8;
+    this.freqData = new Float32Array(this.inspector.frequencyBinCount);
+    this.onhit = null;
+    this.period = 15;
+    this.startPumping();
+}
+HitDetector.prototype.startPumping = function () {
+    var pump = this.pump.bind(this);
+    setInterval(pump, this.period);
+    pump();
+}
+HitDetector.prototype.pump = function () {
+    this.inspector.getFloatFrequencyData(this.freqData);
+    // if has hit and this.onhit
+    //  this.onhit();
 }
 
 function wireUp(nodes) {
@@ -105,19 +167,8 @@ function wireUp(nodes) {
     return dst;
 }
 
-function bootupInspector(inspector) {
-    //setInterval(listenAndDump, 10);
-    pump();
-    var freqData = new Float32Array(inspector.frequencyBinCount);
-    var rep = '';
-    function listenAndDump() {
-    }
-    function pump() {
-        inspector.getFloatFrequencyData(freqData);
-        rep = dump(freqData, inspector.minDecibels, inspector.maxDecibels);
-        hookups['dump'].innerText = rep;
-        requestAnimationFrame(pump);
-    }
+function registerSample(clampedSample) {
+    console.log('got a sample');
 }
 
 // TODO make it easier to get fft data
