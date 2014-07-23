@@ -90,6 +90,10 @@ function gotStream(stream) {
     var input = wireUp([source, biquadFilter, gainNode]);
 
     var spool = new SampleSpooler(input, audioContext, 250);
+    hookups["dump-sample"].onclick = function () {
+        var contents = spool.dumpContents();
+        console.log(contents);
+    }
 
     var detector = new HitDetector(input, audioContext);
     detector.onhit = function () {
@@ -105,13 +109,14 @@ function gotStream(stream) {
  * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
  */
 function SampleSpooler(source, audioContext, spoolTime) {
-    this.bufferSize = 4096;
+    this.bufferSize = 32;
     this.numChannels = 2;
     var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
     this.contentIndex = sampleCount - 1;
     this.contents = new Array(sampleCount);
+    var defaultContent = this.getDefaultContent();
     for (var i=0 ; i < sampleCount ; i++) {
-        this.contents[i] = 0;
+        this.contents[i] = defaultContent;
     }
 
     // start listening to source
@@ -119,11 +124,14 @@ function SampleSpooler(source, audioContext, spoolTime) {
     this.processor.onaudioprocess = this.onaudioprocess.bind(this);
 }
 SampleSpooler.prototype.onaudioprocess = function (e) {
-    console.log(e);
+    var inputBuffer = e.inputBuffer;
+    this.push([inputBuffer.getChannelData(0), inputBuffer.getChannelData(1)]);
 }
 SampleSpooler.prototype.push = function (value) {
     this.contents[this.contentIndex++] = value;
-    if (this.contentIndex > this.contents.length - 1) this.contentIndex = 0;
+    if (this.contentIndex > this.contents.length - 1) {
+        this.contentIndex = 0;
+    }
 }
 SampleSpooler.prototype.dumpContents = function () {
     // get spooler state
@@ -136,6 +144,14 @@ SampleSpooler.prototype.dumpContents = function () {
     var lastBits = contents.slice(0, index);
     var data = firstBits.concat(lastBits);
     return data;
+}
+SampleSpooler.prototype.getDefaultContent = function () {
+    var channels = this.numChannels;
+    var content = new Array(channels);
+    for (var i=0 ; i < channels ; i++) {
+        content[i] = new Float32Array();
+    }
+    return content;
 }
 
 function HitDetector(source, audioContext) {
