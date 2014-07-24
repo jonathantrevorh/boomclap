@@ -1,4 +1,9 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
+    font-family: monospace;
     margin: 0;
 }
 
@@ -22,4 +27,33 @@ table.grid td {
 
 .monospace {
     font-family: monospace;
+}
+
+.graph {
+    width: 100%;
+    border: 1px solid black;
+}
+
+button {
+    background: white;
+    border: 1px solid black;
+    padding: 0.5em 0.75em;
+    font-family: monospace;
+    box-shadow: 0.15em 0.15em 0 0 #666;
+    position: relative;
+}
+
+button:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+button:active {
+    top: 0.15em;
+    left: 0.15em;
+    box-shadow: none;
+}
+
+input[type="range"] {
+    vertical-align: middle;
 }
