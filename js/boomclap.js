@@ -123,9 +123,9 @@ function drawSound(sample, canvas, pointDrawingPartial) {
     var width = canvas.width;
     var samples = sample.reduce(flattenDeep, []);
     var totalSamples = samples.length;
-    var maximum = 0.01;
-    var buckets = samples.reduce(bucket, new Array(width / 2));
-    var stepSize = width / buckets.length;
+    var maximum = 0.05;
+    var buckets = samples.reduce(bucket, new Array(width));
+    var stepSize = width;
     for (var i=0 ; i < buckets.length ; i++) {
         var b = buckets[i];
         if (!b) continue;
@@ -153,6 +153,7 @@ var DrawingPartial = {
 
 function bucket(previousValue, currentValue, index, array) {
     var group = Math.floor(index / previousValue.length);
+    console.log(group);
     previousValue[group] = previousValue[group] || [];
     previousValue[group].push(currentValue);
     return previousValue;
@@ -215,7 +216,7 @@ function flattenDeep(previousValue, currentValue) {
  * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
  */
 function SampleSpooler(source, audioContext, spoolTime) {
-    this.bufferSize = 32;
+    this.bufferSize = 64;
     this.numChannels = 2;
     var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
     this.contentIndex = sampleCount - 1;
@@ -231,12 +232,13 @@ function SampleSpooler(source, audioContext, spoolTime) {
 }
 SampleSpooler.prototype.onaudioprocess = function (e) {
     var inputBuffer = e.inputBuffer;
-    this.push([inputBuffer.getChannelData(0), inputBuffer.getChannelData(1)]);
+    this.push([inputBuffer.getChannelData(0)]);
 }
 SampleSpooler.prototype.push = function (value) {
     this.contents[this.contentIndex++] = value;
     if (this.contentIndex > this.contents.length - 1) {
         this.contentIndex = 0;
+        dumpAndClamp();
     }
 }
 SampleSpooler.prototype.dumpContents = function () {
@@ -262,7 +264,7 @@ SampleSpooler.prototype.getDefaultContent = function () {
 
 function HitDetector(source, audioContext) {
     this.inspector = audioContext.createAnalyser();
-    this.inspector.smoothingTimeConstant = 0.8;
+    this.inspector.smoothingTimeConstant = 0.0;
     this.freqData = new Float32Array(this.inspector.frequencyBinCount);
     this.onhit = null;
     this.period = 15;
@@ -277,7 +279,7 @@ HitDetector.prototype.pump = function () {
     this.inspector.getFloatFrequencyData(this.freqData);
     // if has hit and this.onhit
     //  this.triggerHit();
-    this.triggerHit();
+    //this.triggerHit();
 }
 HitDetector.prototype.triggerHit = function () {
     if (!this.onhit) {
