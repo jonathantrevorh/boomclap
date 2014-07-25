@@ -118,6 +118,8 @@ function registerSound(clampedSound) {
 
 function drawSound(sample, canvas, pointDrawingPartial) {
     var context = canvas.getContext('2d');
+    canvas.width = 1000;
+    canvas.height = 250;
     var width = canvas.width;
     var samples = sample.reduce(flattenDeep, []);
     var totalSamples = samples.length;
