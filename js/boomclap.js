@@ -121,11 +121,22 @@ function drawSound(sample, canvas, pointDrawingPartial) {
     canvas.width = 1000;
     canvas.height = 250;
     var width = canvas.width;
-    var samples = sample.reduce(flattenDeep, []);
+    var samples = cloneToNormalArray(sample);
+    /*
+    var source = audioContext.createBufferSource();
+    var buffer = audioContext.createBuffer(1, samples.length, 44100);
+    var bufferArray = buffer.getChannelData(0);
+    for (var i=0 ; i < samples.length ; i++) {
+        bufferArray[i] = samples[i];
+    }
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start();
+    */
     var totalSamples = samples.length;
     var maximum = 0.05;
     var buckets = samples.reduce(bucket, new Array(width));
-    var stepSize = width;
+    var stepSize = width / buckets.length;
     for (var i=0 ; i < buckets.length ; i++) {
         var b = buckets[i];
         if (!b) continue;
@@ -151,9 +162,16 @@ var DrawingPartial = {
     }
 };
 
+function cloneToNormalArray(float32Array) {
+    var normal = new Array(float32Array.length);
+    for (var i = 0 ; i < float32Array.length ; i++) {
+        normal[i] = float32Array[i];
+    }
+    return normal;
+}
+
 function bucket(previousValue, currentValue, index, array) {
-    var group = Math.floor(index / previousValue.length);
-    console.log(group);
+    var group = Math.floor(index / array.length * previousValue.length);
     previousValue[group] = previousValue[group] || [];
     previousValue[group].push(currentValue);
     return previousValue;
@@ -216,50 +234,50 @@ function flattenDeep(previousValue, currentValue) {
  * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
  */
 function SampleSpooler(source, audioContext, spoolTime) {
-    this.bufferSize = 64;
+    this.bufferSize = 16;
+    this.sampleSize = 4096;
     this.numChannels = 2;
     var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
-    this.contentIndex = sampleCount - 1;
-    this.contents = new Array(sampleCount);
-    var defaultContent = this.getDefaultContent();
-    for (var i=0 ; i < sampleCount ; i++) {
-        this.contents[i] = defaultContent;
-    }
+    this.contentIndex = 0;
+    var totalSamples = this.sampleSize * this.bufferSize;
+    console.log(totalSamples);
+    this.contents = new Float32Array(totalSamples);
 
     // start listening to source
-    this.processor = audioContext.createScriptProcessor();
-    this.processor.onaudioprocess = this.onaudioprocess.bind(this);
+    if (audioContext) {
+        this.processor = audioContext.createScriptProcessor(this.sampleSize, this.numChannels, this.numChannels);
+        this.processor.onaudioprocess = this.onaudioprocess.bind(this);
+    }
 }
 SampleSpooler.prototype.onaudioprocess = function (e) {
     var inputBuffer = e.inputBuffer;
-    this.push([inputBuffer.getChannelData(0)]);
+    var left = inputBuffer.getChannelData(0);
+    var right = inputBuffer.getChannelData(1);
+    this.push(left);
 }
 SampleSpooler.prototype.push = function (value) {
-    this.contents[this.contentIndex++] = value;
-    if (this.contentIndex > this.contents.length - 1) {
+    var offset = this.contentIndex * this.sampleSize;
+    this.contents.set(value, offset);
+    this.contentIndex++;
+    if (this.contentIndex == this.bufferSize) {
         this.contentIndex = 0;
-        dumpAndClamp();
     }
+    dumpAndClamp();
 }
 SampleSpooler.prototype.dumpContents = function () {
     // get spooler state
-    var index = this.contentIndex;
-    var contents = this.contents.slice(0);
-    var total = contents.length;
+    var index = this.contentIndex * this.sampleSize;
+    var total = this.contents.length;
 
     // reorder data to start at 0, not index
-    var firstBits = contents.slice(index, total);
-    var lastBits = contents.slice(0, index);
-    var data = firstBits.concat(lastBits);
+    var firstBits = this.contents.subarray(index, total);
+    var lastBits = this.contents.subarray(0, index);
+
+    var data = new Float32Array(this.contents.length);
+    data.set(firstBits, index);
+    data.set(lastBits, 0);
+
     return data;
-}
-SampleSpooler.prototype.getDefaultContent = function () {
-    var channels = this.numChannels;
-    var content = new Array(channels);
-    for (var i=0 ; i < channels ; i++) {
-        content[i] = new Float32Array();
-    }
-    return content;
 }
 
 function HitDetector(source, audioContext) {
