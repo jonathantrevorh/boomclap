@@ -59,7 +59,20 @@ function start() {
 
 function startPlayerUI() {
     loadTemplate('player');
-    hookups['dump-sample'].onclick = dumpAndClamp;
+    hookups['record'].onclick = startRecording;
+}
+
+function startRecording() {
+    loadTemplate('record');
+    hookups['freeze'].onclick = function () {
+        ;
+    };
+    hookups['save'].onclick = function () {
+        ;
+    };
+    toolChain.spool.onsample = function (samples) {
+        drawSound(samples, hookups['amplitude-graph'], DrawingPartial.Amplitude);
+    };
 }
 
 var setupWorker = (function () {
@@ -85,31 +98,18 @@ function gotStream(stream) {
     biquadFilter.type = BiquadFilterNode.LOWPASS;
     biquadFilter.frequency.value = 1000;
 
-    var gainNode = audioContext.createGainNode();
+    /*var gainNode = audioContext.createGainNode();
     var volumeSlider = hookups['volume'];
     volumeSlider.value = 100*gainNode.gain.value;
     volumeSlider.onchange = function () {
         gainNode.gain.value = volumeSlider.value / 100;
-    };
+    };*/
 
-    var input = wireUp([source, biquadFilter, gainNode]);
+    var input = wireUp([source, biquadFilter]);
 
-    toolChain.spool = new SampleSpooler(input, audioContext, 250);
-    var detector = new HitDetector(input, audioContext);
-    detector.onhit = dumpAndClamp;
+    toolChain.spool = new SampleSpooler(input, audioContext, 32, 1024);
 
-    wireUp([input, toolChain.spool.processor, detector.inspector, audioContext.destination]);
-}
-
-function dumpAndClamp() {
-    var contents = toolChain.spool.dumpContents();
-    clampSample(contents);
-}
-
-function clampSample(sample) {
-    loadTemplate('clamp');
-    hookups['save'].onclick = startPlayerUI;
-    drawSound(sample, hookups['amplitude-graph'], DrawingPartial.Amplitude);
+    wireUp([input, toolChain.spool.processor, audioContext.destination]);
 }
 
 function registerSound(clampedSound) {
@@ -122,17 +122,6 @@ function drawSound(sample, canvas, pointDrawingPartial) {
     canvas.height = 250;
     var width = canvas.width;
     var samples = cloneToNormalArray(sample);
-    /*
-    var source = audioContext.createBufferSource();
-    var buffer = audioContext.createBuffer(1, samples.length, 44100);
-    var bufferArray = buffer.getChannelData(0);
-    for (var i=0 ; i < samples.length ; i++) {
-        bufferArray[i] = samples[i];
-    }
-    source.buffer = buffer;
-    source.connect(audioContext.destination);
-    source.start();
-    */
     var totalSamples = samples.length;
     var maximum = 0.05;
     var buckets = samples.reduce(bucket, new Array(width));
@@ -230,17 +219,14 @@ function flattenDeep(previousValue, currentValue) {
 }
 
 /**
- * SampleSpooler keeps track of spoolTime much samples from the source
- * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
+ * SampleSpooler keeps track of some samples from the source
  */
-function SampleSpooler(source, audioContext, spoolTime) {
-    this.bufferSize = 32;
-    this.sampleSize = 1024;
+function SampleSpooler(source, audioContext, sampleCount, sampleSize) {
+    this.sampleCount = sampleCount;
+    this.sampleSize = sampleSize;
     this.numChannels = 2;
-    var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
     this.contentIndex = 0;
-    var totalSamples = this.sampleSize * this.bufferSize;
-    console.log(totalSamples);
+    var totalSamples = this.sampleSize * this.sampleCount;
     this.contents = new Float32Array(totalSamples);
 
     // start listening to source
@@ -248,6 +234,8 @@ function SampleSpooler(source, audioContext, spoolTime) {
         this.processor = audioContext.createScriptProcessor(this.sampleSize, this.numChannels, this.numChannels);
         this.processor.onaudioprocess = this.onaudioprocess.bind(this);
     }
+
+    this.onsample = null;
 }
 SampleSpooler.prototype.onaudioprocess = function (e) {
     var inputBuffer = e.inputBuffer;
@@ -256,11 +244,15 @@ SampleSpooler.prototype.onaudioprocess = function (e) {
     this.push(left);
 }
 SampleSpooler.prototype.push = function (value) {
-    var offset = this.contentIndex * this.sampleSize;
-    this.contents.set(value, offset);
     this.contentIndex--;
     if (this.contentIndex < 0) {
-        this.contentIndex = this.bufferSize - 1;
+        this.contentIndex = this.sampleCount - 1;
+    }
+    var offset = this.contentIndex * this.sampleSize;
+    this.contents.set(value, offset);
+
+    if (this.onsample) {
+        this.onsample(this.dumpContents());
     }
 }
 SampleSpooler.prototype.dumpContents = function () {
@@ -273,7 +265,6 @@ SampleSpooler.prototype.dumpContents = function () {
     var lastBits = this.contents.subarray(0, index);
 
     var data = new Float32Array(this.contents.length);
-    console.log(index, firstBits.length, lastBits.length);
     data.set(firstBits, 0);
     data.set(lastBits, total - index);
 
@@ -340,6 +331,7 @@ function repeat(s, randomN) {
     while (n--) ss += s;
     return ss;
 }
+
 function normalize(value, min, max) {
     var normalized = (value - min) / (max - min);
     return normalized;

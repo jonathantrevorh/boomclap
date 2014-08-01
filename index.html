@@ -1,5 +1,6 @@
 <head>
     <title>Boom Clap</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link rel="stylesheet" type="text/css" href="/css/boomclap.css">
     <script type="text/javascript" src="/js/boomclap.js"></script>
 </head>
@@ -12,9 +13,7 @@
     <button class="btn btn-primary" onclick="start()" id="start-button">Start</button>
 </script>
 <script type="text/html" id="player">
-    <label for="volume">Input volume: <input type="range" id="volume" /></label>
-    <button id="dump-sample">Dump sample</button>
-    <p id="dump" class="monospace"></p>
+    <button id="record">Record</button>
     <table class="grid">
         <thead>
             <tr>
@@ -59,8 +58,9 @@
     </table>
 </div>
 </script>
-<script type="text/html" id="clamp">
+<script type="text/html" id="record">
 <canvas id="amplitude-graph" class="graph"></canvas>
+<button id="freeze">Freeze</button>
 <button id="save">Save</button>
 </script>
 </html>
