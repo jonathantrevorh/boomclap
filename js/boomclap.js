@@ -234,8 +234,8 @@ function flattenDeep(previousValue, currentValue) {
  * Calling `dumpContents()` at t will return samples during [t - spoolTime, t]
  */
 function SampleSpooler(source, audioContext, spoolTime) {
-    this.bufferSize = 16;
-    this.sampleSize = 4096;
+    this.bufferSize = 32;
+    this.sampleSize = 1024;
     this.numChannels = 2;
     var sampleCount = this.bufferSize;// TODO be respectize of spoolTime
     this.contentIndex = 0;
@@ -258,11 +258,10 @@ SampleSpooler.prototype.onaudioprocess = function (e) {
 SampleSpooler.prototype.push = function (value) {
     var offset = this.contentIndex * this.sampleSize;
     this.contents.set(value, offset);
-    this.contentIndex++;
-    if (this.contentIndex == this.bufferSize) {
-        this.contentIndex = 0;
+    this.contentIndex--;
+    if (this.contentIndex < 0) {
+        this.contentIndex = this.bufferSize - 1;
     }
-    dumpAndClamp();
 }
 SampleSpooler.prototype.dumpContents = function () {
     // get spooler state
@@ -274,8 +273,9 @@ SampleSpooler.prototype.dumpContents = function () {
     var lastBits = this.contents.subarray(0, index);
 
     var data = new Float32Array(this.contents.length);
-    data.set(firstBits, index);
-    data.set(lastBits, 0);
+    console.log(index, firstBits.length, lastBits.length);
+    data.set(firstBits, 0);
+    data.set(lastBits, total - index);
 
     return data;
 }
