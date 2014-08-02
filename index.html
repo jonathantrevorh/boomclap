@@ -83,7 +83,13 @@
 </div>
 </script>
 <script type="text/html" id="record">
-<canvas id="amplitude-graph" class="graph"></canvas>
+<div class="relative-container">
+    <canvas id="amplitude-graph" class="graph"></canvas>
+    <div id="handles" class="hidden">
+        <div class="handle handle-left" id="left-handle"></div>
+        <div class="handle handle-right" id="right-handle"></div>
+    </div>
+</div>
 <button id="freeze">Freeze</button>
 <button id="save">Save</button>
 </script>

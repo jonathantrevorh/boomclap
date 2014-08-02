@@ -1,6 +1,7 @@
 'use strict';
 
 var templates = {};
+var template = {};
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 var audioContext = new window.AudioContext();
@@ -39,6 +40,9 @@ function loadTemplate(id) {
     if (!html) {
         throw new Error('No such template ' + id);
     }
+    if (template.onunload) {
+        template.onunload();
+    }
     document.body.innerHTML = html;
     loadHookups();
 }
@@ -64,15 +68,25 @@ function startPlayerUI() {
 
 function startRecording() {
     loadTemplate('record');
+    var frozen = false;
+    var samples = null;
     hookups['freeze'].onclick = function () {
-        ;
+        frozen = !frozen;
+        this.innerText = frozen ? 'Unfreeze' : 'Freeze';
+        hookups['handles'].classList.toggle('hidden');
     };
     hookups['save'].onclick = function () {
         ;
     };
-    toolChain.spool.onsample = function (samples) {
-        drawSound(samples, hookups['amplitude-graph'], DrawingPartial.Amplitude);
+    toolChain.spool.onsample = function (newSamples) {
+        if (!frozen) {
+            samples = newSamples;
+            drawSound(samples, hookups['amplitude-graph'], DrawingPartial.Amplitude);
+        }
     };
+    template.onunload = function () {
+        toolChain.spool.onsample = null;
+    }
 }
 
 var setupWorker = (function () {
@@ -107,7 +121,7 @@ function gotStream(stream) {
 
     var input = wireUp([source, biquadFilter]);
 
-    toolChain.spool = new SampleSpooler(input, audioContext, 32, 1024);
+    toolChain.spool = new SampleSpooler(input, audioContext, 64, 1024);
 
     wireUp([input, toolChain.spool.processor, audioContext.destination]);
 }
