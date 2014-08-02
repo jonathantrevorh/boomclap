@@ -7,33 +7,6 @@ body {
     margin: 0;
 }
 
-.text-center {
-    text-align: center;
-}
-
-.hidden {
-    display: none;
-}
-
-table.grid {
-    width: 99%;
-    border-collapse: collapse;
-}
-
-table.grid td {
-    height: 5em;
-    border: 1px solid rgba(0, 0, 0, 0.25);
-}
-
-.monospace {
-    font-family: monospace;
-}
-
-.graph {
-    width: 100%;
-    border: 1px solid black;
-}
-
 button {
     background: white;
     border: 1px solid black;
@@ -56,4 +29,52 @@ button:active {
 
 input[type="range"] {
     vertical-align: middle;
+}
+
+.hidden {
+    display: none;
+}
+
+.relative-container {
+    position: relative;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.monospace {
+    font-family: monospace;
+}
+
+table.grid {
+    width: 99%;
+    border-collapse: collapse;
+}
+
+table.grid td {
+    height: 5em;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.graph {
+    width: 100%;
+    border: 1px solid black;
+}
+
+.handle {
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 0 ridge black;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 25%;
+}
+
+.handle.handle-left {
+    left: 0;
+}
+
+.handle.handle-right {
+    right: 0;
 }
