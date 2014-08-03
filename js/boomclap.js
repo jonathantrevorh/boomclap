@@ -92,7 +92,16 @@ function startRecording() {
         this.style.width = newWidth;
     }
     hookups['save'].onclick = function () {
-        ;
+        var parentWidth = hookups['left-handle'].parentElement.offsetWidth;
+        var leftHandleWidth = hookups['left-handle'].offsetWidth;
+        var rightHandleWidth = hookups['right-handle'].offsetWidth;
+        var bounds = {
+            lower: Math.floor(leftHandleWidth / parentWidth * samples.length),
+            upper: Math.floor((1 - rightHandleWidth / parentWidth) * samples.length)
+        };
+        var clampedSample = samples.subarray(bounds.lower, bounds.upper);
+        registerSample(clampedSample);
+        startPlayerUI();
     };
     toolChain.spool.onsample = function (newSamples) {
         if (!frozen) {
@@ -148,7 +157,7 @@ function gotStream(stream) {
 
     var biquadFilter = audioContext.createBiquadFilter();
     biquadFilter.type = BiquadFilterNode.LOWPASS;
-    biquadFilter.frequency.value = 1000;
+    biquadFilter.frequency.value = 5000;
 
     /*var gainNode = audioContext.createGainNode();
     var volumeSlider = hookups['volume'];
@@ -159,7 +168,7 @@ function gotStream(stream) {
 
     var input = wireUp([source, biquadFilter]);
 
-    toolChain.spool = new SampleSpooler(input, audioContext, 64, 1024);
+    toolChain.spool = new SampleSpooler(input, audioContext, 32, 2048);
 
     wireUp([input, toolChain.spool.processor, audioContext.destination]);
 }
@@ -175,7 +184,7 @@ function drawSound(sample, canvas, pointDrawingPartial) {
     var width = canvas.width;
     var samples = cloneToNormalArray(sample);
     var totalSamples = samples.length;
-    var maximum = 0.05;
+    var maximum = 0.08;
     var buckets = samples.reduce(bucket, new Array(width));
     var stepSize = width / buckets.length;
     for (var i=0 ; i < buckets.length ; i++) {
@@ -227,10 +236,6 @@ function add(previousValue, currentValue) {
     }
     return previousValue + currentValue;
 };
-
-function max(previousValue, currentValue) {
-    return previousValue > currentValue ? previousValue : currentValue;
-}
 
 function count(previousValue, currentValue) {
     return previousValue + 1;
@@ -296,11 +301,11 @@ SampleSpooler.prototype.onaudioprocess = function (e) {
     this.push(left);
 }
 SampleSpooler.prototype.push = function (value) {
-    this.contentIndex--;
-    if (this.contentIndex < 0) {
-        this.contentIndex = this.sampleCount - 1;
-    }
     var offset = this.contentIndex * this.sampleSize;
+    this.contentIndex++;
+    if (this.contentIndex == this.sampleCount) {
+        this.contentIndex = 0;
+    }
     this.contents.set(value, offset);
 
     if (this.onsample) {
@@ -360,7 +365,7 @@ function wireUp(nodes) {
 }
 
 function registerSample(clampedSample) {
-    console.log('got a sample');
+    console.log('got a sample with ' + clampedSample.length + ' values');
 }
 
 // TODO make it easier to get fft data
