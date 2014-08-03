@@ -63,13 +63,13 @@ templates.on('record', (function () {
             setFrozen(false);
             templates.hookups['freeze'].onclick = onFreezeClick;
             templates.hookups['save'].onclick = onSaveClick;
+            templates.hookups['cancel'].onclick = exit;
             onDrag(templates.hookups['left-handle'], moveWithDrag);
             onDrag(templates.hookups['right-handle'], moveWithDrag);
             toolChain.spool.onsample = onSample;
         },
         onunload: function () {
             toolChain.spool.onsample = null;
-            setFrozen(false);
         }
     };
     return handlers;
@@ -106,8 +106,11 @@ templates.on('record', (function () {
         };
         var clampedSample = samples.subarray(bounds.lower, bounds.upper);
         player.registerSample(clampedSample);
-        templates.goTo('player');
+        exit();
     };
+    function exit() {
+        templates.goTo('player');
+    }
     function onSample(newSamples) {
         if (!frozen) {
             samples = newSamples;
