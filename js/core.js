@@ -80,8 +80,9 @@ Templates.prototype.loadTemplatesFromDOM = function () {
 function Player() {
     this.state = 'stopped';
     this.samples = [];
-    this.bpm = 140;
-    this.intervals = 16;
+    this.bpm = 60;
+    this.beats = 4;
+    this.intervals = 4;
     this.timeout = null;
     this.beat = 0;
 
@@ -127,7 +128,7 @@ Player.prototype.playBeat = function () {
         }
     }
     this.beat++;
-    if (this.beat >= this.intervals) {
+    if (this.beat >= this.intervals * this.beats) {
         this.beat = 0;
     }
     if (this.state !== 'stopped') {
@@ -153,7 +154,7 @@ Player.prototype.playSample = function (sample) {
     source.start(0);
 };
 Player.prototype.getIntervalInMillis = function () {
-    return this.bpm * 1000 / 60 / this.intervals;
+    return 60 * 1000 / this.bpm / this.intervals;
 };
 
 function onDrag(element, handler) {
