@@ -14,6 +14,7 @@ button {
     font-family: monospace;
     box-shadow: 0.15em 0.15em 0 0 #666;
     position: relative;
+    min-width: 8em;
 }
 
 button:disabled {
@@ -61,9 +62,22 @@ table.grid {
     border-collapse: collapse;
 }
 
+table.grid th.active {
+    background-color: lightgrey;
+}
+
 table.grid td {
-    height: 5em;
+    height: 4em;
     border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+table.grid td.active {
+    background-color: black;
+    color: white;
+}
+
+table.grid td:first-child {
+    width: 15%;
 }
 
 .graph {
