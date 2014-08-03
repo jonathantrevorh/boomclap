@@ -73,7 +73,8 @@ table.grid td {
 
 .handle {
     background-color: rgba(0, 0, 0, 0.25);
-    border: 0 ridge black;
+    border: 0 double black;
+    cursor: col-resize;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -82,8 +83,10 @@ table.grid td {
 
 .handle.handle-left {
     left: 0;
+    border-right-width: 0.25em;
 }
 
 .handle.handle-right {
     right: 0;
+    border-left-width: 0.25em;
 }

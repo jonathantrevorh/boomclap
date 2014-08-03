@@ -76,6 +76,21 @@ function startRecording() {
         hookups['handles'].classList.toggle('hidden');
         hookups['save'].disabled = !frozen;
     };
+    onDrag(hookups['left-handle'], moveWithDrag);
+    onDrag(hookups['right-handle'], moveWithDrag);
+    function moveWithDrag(event, previousEvent) {
+        var parent = hookups['left-handle'].parentElement;
+        var maxWidth = parent.offsetWidth;
+        var children = parent.children;
+        for (var i = 0 ; i < children.length ; i++) {
+            maxWidth -= children[i].offsetWidth;
+        }
+        maxWidth += this.offsetWidth;
+        var movement = previousEvent.screenX - event.screenX;
+        var newWidth = this.offsetWidth + (this.id === 'left-handle' ? -1 : 1) * movement;
+        var newWidth = Math.min(Math.max(0, newWidth), maxWidth);
+        this.style.width = newWidth;
+    }
     hookups['save'].onclick = function () {
         ;
     };
@@ -88,6 +103,28 @@ function startRecording() {
     template.onunload = function () {
         toolChain.spool.onsample = null;
     }
+}
+
+function onDrag(element, handler) {
+    var isBeingMoved = false;
+    var boundHandler = handler.bind(element);
+    var downEvent = null;
+    var previousEvent = null;
+    element.onmousedown = function (event) {
+        isBeingMoved = true;
+        previousEvent = downEvent = event;
+    };
+    element.onmousemove = function (event) {
+        if (!isBeingMoved) {
+            return;
+        }
+        var oldPreviousEvent = previousEvent;
+        previousEvent = event;
+        boundHandler(event, oldPreviousEvent);
+    };
+    element.onmouseup = element.onmouseleave = function () {
+        isBeingMoved = false;
+    };
 }
 
 var setupWorker = (function () {
