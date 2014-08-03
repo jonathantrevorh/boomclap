@@ -1,11 +1,9 @@
 'use strict';
 
-var templates = {};
-var template = {};
+var templates = new Templates();
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 var audioContext = new window.AudioContext();
-var hookups = {};
 
 document.onreadystatechange = function (e) {
     var state = document.readyState;
@@ -17,8 +15,8 @@ document.onreadystatechange = function (e) {
 };
 
 function onDOMReady() {
-    templates = getTemplates();
-    loadTemplate('index');
+    templates.loadTemplates(getTemplates());
+    templates.goTo('index');
     start();
 }
 
@@ -26,60 +24,103 @@ function onContentReady() {
 }
 
 function getTemplates() {
-    var tmp = {};
+    var tmp = [];
     var elements = document.querySelectorAll('script[type="text/html"]');
     for (var i=0 ; i < elements.length ; i++) {
         var script = elements[i];
-        tmp[script.id] = script.innerText;
+        tmp.push({
+            name: script.id,
+            content: script.innerText
+        });
     }
     return tmp;
 }
 
-function loadTemplate(id) {
-    var html = templates[id];
-    if (!html) {
-        throw new Error('No such template ' + id);
-    }
-    if (template.onunload) {
-        template.onunload();
-    }
-    document.body.innerHTML = html;
-    loadHookups();
-}
+function Templates() {
+    this.templates = {};
+    this.handlers = {};
+    this.hookups = {};
 
-function loadHookups() {
-    hookups = {};
+    this.currentTemplateName = null;
+}
+Templates.prototype.loadTemplates = function (givenTemplates) {
+    var templates = !givenTemplates.length ? [givenTemplates] : givenTemplates;
+    for (var i=0 ; i < templates.length ; i++) {
+        var template = templates[i];
+        this.templates[template.name] = template;
+    }
+};
+Templates.prototype.on = function (name, handlers) {
+    this.handlers[name] = handlers;
+};
+Templates.prototype.goTo = function (name, data) {
+    var template = this.templates[name];
+    if (!template) {
+        throw new Error('No such template ' + name);
+    }
+    this.triggerHandler('unload');
+    this.currentTemplateName = name;
+    document.body.innerHTML = template.content;
+    this.loadHookups();
+    this.triggerHandler('load', data);
+};
+Templates.prototype.triggerHandler = function (name, data) {
+    var handlers = this.handlers[this.currentTemplateName];
+    if (handlers && handlers[name]) {
+        handlers[name](data);
+    }
+};
+Templates.prototype.loadHookups = function () {
+    this.hookups = {};
     var thingsWithIds = document.querySelectorAll('[id]');
     var length = thingsWithIds.length;
     while (length--) {
         var thing = thingsWithIds[length];
-        hookups[thing.id] = thing;
+        this.hookups[thing.id] = thing;
     }
-}
+};
 
 function start() {
     setupWorker();
 }
 
-function startPlayerUI() {
-    loadTemplate('player');
-    hookups['record'].onclick = startRecording;
-}
+templates.on('player', (function () {
+    var handlers = {
+        load: function () {
+            templates.hookups['record'].onclick = onRecordClick;
+        }
+    };
+    return handlers;
+    function onRecordClick() {
+        templates.goTo('record');
+    };
+})());
 
-function startRecording() {
-    loadTemplate('record');
+templates.on('record', (function () {
     var frozen = false;
     var samples = null;
-    hookups['freeze'].onclick = function () {
+    var handlers = {
+        load: function () {
+            templates.hookups['freeze'].onclick = onFreezeClick;
+            templates.hookups['save'].onclick = onSaveClick;
+            onDrag(templates.hookups['left-handle'], moveWithDrag);
+            onDrag(templates.hookups['right-handle'], moveWithDrag);
+            toolChain.spool.onsample = onSample;
+        },
+        onunload: function () {
+            toolChain.spool.onsample = null;
+        }
+    };
+    return handlers;
+
+    function onFreezeClick() {
         frozen = !frozen;
         this.innerText = frozen ? 'Unfreeze' : 'Freeze';
-        hookups['handles'].classList.toggle('hidden');
-        hookups['save'].disabled = !frozen;
+        templates.hookups['handles'].classList.toggle('hidden');
+        templates.hookups['save'].disabled = !frozen;
     };
-    onDrag(hookups['left-handle'], moveWithDrag);
-    onDrag(hookups['right-handle'], moveWithDrag);
     function moveWithDrag(event, previousEvent) {
-        var parent = hookups['left-handle'].parentElement;
+        var parent = templates.hookups['left-handle'].parentElement;
         var maxWidth = parent.offsetWidth;
         var children = parent.children;
         for (var i = 0 ; i < children.length ; i++) {
@@ -91,28 +132,25 @@ function startRecording() {
         var newWidth = Math.min(Math.max(0, newWidth), maxWidth);
         this.style.width = newWidth;
     }
-    hookups['save'].onclick = function () {
-        var parentWidth = hookups['left-handle'].parentElement.offsetWidth;
-        var leftHandleWidth = hookups['left-handle'].offsetWidth;
-        var rightHandleWidth = hookups['right-handle'].offsetWidth;
+    function onSaveClick() {
+        var parentWidth = templates.hookups['left-handle'].parentElement.offsetWidth;
+        var leftHandleWidth = templates.hookups['left-handle'].offsetWidth;
+        var rightHandleWidth = templates.hookups['right-handle'].offsetWidth;
         var bounds = {
             lower: Math.floor(leftHandleWidth / parentWidth * samples.length),
             upper: Math.floor((1 - rightHandleWidth / parentWidth) * samples.length)
         };
         var clampedSample = samples.subarray(bounds.lower, bounds.upper);
         registerSample(clampedSample);
-        startPlayerUI();
+        templates.goTo('player');
     };
-    toolChain.spool.onsample = function (newSamples) {
+    function onSample(newSamples) {
         if (!frozen) {
             samples = newSamples;
-            drawSound(samples, hookups['amplitude-graph'], DrawingPartial.Amplitude);
+            drawSound(samples, templates.hookups['amplitude-graph'], DrawingPartial.Amplitude);
         }
     };
-    template.onunload = function () {
-        toolChain.spool.onsample = null;
-    }
-}
+})());
 
 function onDrag(element, handler) {
     var isBeingMoved = false;
@@ -152,7 +190,7 @@ var toolChain = {
 };
 
 function gotStream(stream) {
-    startPlayerUI();
+    templates.goTo('player');
     var source = audioContext.createMediaStreamSource(stream);
 
     var biquadFilter = audioContext.createBiquadFilter();
@@ -171,10 +209,6 @@ function gotStream(stream) {
     toolChain.spool = new SampleSpooler(input, audioContext, 32, 2048);
 
     wireUp([input, toolChain.spool.processor, audioContext.destination]);
-}
-
-function registerSound(clampedSound) {
-    ;
 }
 
 function drawSound(sample, canvas, pointDrawingPartial) {
