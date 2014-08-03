@@ -84,15 +84,98 @@ function start() {
     setupWorker();
 }
 
+function Player() {
+    this.state = 'stopped';
+    this.samples = [];
+    this.bpm = 140;
+    this.intervals = 8;
+    this.timeout = null;
+    this.beat = 0;
+
+    this.onsample = null;
+}
+Player.prototype.registerSample = function (sample) {
+    var sampleBundle = {
+        data: sample,
+        beats: {}
+    };
+    this.samples.push(sampleBundle);
+    if (this.onsample) {
+        this.onsample(sampleBundle);
+    }
+};
+Player.prototype.removeSample = function (i) {
+    this.samples.splice(i, 1);
+};
+Player.prototype.play = function () {
+    this.state = 'playing';
+    this.playBeat();
+};
+Player.prototype.pause = function () {
+    this.state = 'paused';
+};
+Player.prototype.stop = function () {
+    this.state = 'stopped';
+};
+Player.prototype.playBeatIn = function (millis) {
+    this.timeout = setTimeout(this.playBeat.bind(this), millis);
+};
+Player.prototype.playBeat = function () {
+    if (this.state === 'playing') {
+        this.samples.filter(this.shouldPlaySample.bind(this)).map(this.playSample.bind(this));
+    }
+    this.beat++;
+    if (this.beat >= this.intervals) {
+        this.beat = 0;
+    }
+    if (this.state !== 'stopped') {
+        this.playBeatIn(this.getIntervalInMillis());
+    }
+};
+Player.prototype.shouldPlaySample = function (sample) {
+    return sample && sample.beats && sample.beats[this.beat];
+};
+Player.prototype.toggleBeat = function (sampleIndex, beatIndex) {
+    var sample = this.samples[sampleIndex];
+    if (!sample) {
+        console.error('No such sample ' + sampleIndex);
+    }
+    sample.beats[beatIndex] = !sample.beats[beatIndex];
+};
+Player.prototype.playSample = function (sample) {
+    console.log(sample);
+};
+Player.prototype.getIntervalInMillis = function () {
+    return this.bpm * 1000 / 60 / this.intervals;
+};
+
+var player = new Player();
 templates.on('player', (function () {
     var handlers = {
         load: function () {
             templates.hookups['record'].onclick = onRecordClick;
+            templates.hookups['pad-grid'].onclick = onTogglePlaySample;
+            player.play();
+            player.onsample = redrawGrid;
+        },
+        unload: function () {
+            player.stop();
+            player.onsample = null;
         }
     };
     return handlers;
     function onRecordClick() {
         templates.goTo('record');
+    };
+    function onTogglePlaySample(event) {
+        var target = event.target;
+        var parent = target.parentElement;
+        var sampleIndex = Array.prototype.indexOf.call(parent.parentElement.children, parent);
+        var beatIndex = Array.prototype.indexOf.call(parent.children, target) - 1;
+        player.toggleBeat(sampleIndex, beatIndex);
+    };
+    function redrawGrid() {
+        ;
     };
 })());
 
@@ -141,7 +224,7 @@ templates.on('record', (function () {
             upper: Math.floor((1 - rightHandleWidth / parentWidth) * samples.length)
         };
         var clampedSample = samples.subarray(bounds.lower, bounds.upper);
-        registerSample(clampedSample);
+        player.registerSample(clampedSample);
         templates.goTo('player');
     };
     function onSample(newSamples) {
@@ -396,10 +479,6 @@ function wireUp(nodes) {
         src.connect(dst);
     }
     return dst;
-}
-
-function registerSample(clampedSample) {
-    console.log('got a sample with ' + clampedSample.length + ' values');
 }
 
 // TODO make it easier to get fft data
