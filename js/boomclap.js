@@ -74,6 +74,7 @@ function startRecording() {
         frozen = !frozen;
         this.innerText = frozen ? 'Unfreeze' : 'Freeze';
         hookups['handles'].classList.toggle('hidden');
+        hookups['save'].disabled = !frozen;
     };
     hookups['save'].onclick = function () {
         ;

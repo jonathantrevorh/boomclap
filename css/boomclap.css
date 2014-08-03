@@ -16,12 +16,21 @@ button {
     position: relative;
 }
 
-button:hover {
+button:disabled {
+    border-color: grey;
+    box-shadow-color: #999;
+}
+
+button:not(:disabled):hover {
     cursor: pointer;
     text-decoration: underline;
 }
 
-button:active {
+button:disabled:hover {
+    cursor: not-allowed;
+}
+
+button:not(:disabled):active {
     top: 0.15em;
     left: 0.15em;
     box-shadow: none;
