@@ -77,12 +77,12 @@ Templates.prototype.loadTemplatesFromDOM = function () {
     this.loadTemplates(tmp);
 }
 
-function Player() {
+function Player(bpm, beats, intervals) {
     this.state = 'stopped';
     this.samples = [];
-    this.bpm = 60;
-    this.beats = 4;
-    this.intervals = 4;
+    this.bpm = bpm;
+    this.beats = beats;
+    this.intervals = intervals;
     this.timeout = null;
     this.beat = 0;
 

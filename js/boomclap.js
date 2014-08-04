@@ -13,7 +13,7 @@ function start() {
     setupWorker(gotStream);
 }
 
-var player = new Player();
+var player = new Player(140, 4, 4);
 templates.on('player', (function () {
     var handlers = {
         load: function () {
