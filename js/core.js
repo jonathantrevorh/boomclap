@@ -108,32 +108,40 @@ Player.prototype.removeSample = function (i) {
     this.samples.splice(i, 1);
 };
 Player.prototype.play = function () {
-    this.state = 'playing';
+    this.setState('playing');
     this.playBeat();
 };
 Player.prototype.pause = function () {
-    this.state = 'paused';
+    this.setState('paused');
 };
 Player.prototype.stop = function () {
-    this.state = 'stopped';
+    this.setState('stopped');
+};
+Player.prototype.setState = function (state) {
+    this.state = state;
+    if (this.onstatechange) {
+        this.onstatechange();
+    }
+};
+Player.prototype.isPlaying = function () {
+    return this.state === 'playing';
 };
 Player.prototype.playBeatIn = function (millis) {
     this.timeout = setTimeout(this.playBeat.bind(this), millis);
 };
 Player.prototype.playBeat = function () {
-    if (this.state === 'playing') {
-        this.samples.filter(this.shouldPlaySample.bind(this)).map(this.playSample.bind(this));
-        if (this.onbeat) {
-            this.onbeat();
-        }
+    if (!this.isPlaying()) {
+        return;
+    }
+    this.samples.filter(this.shouldPlaySample.bind(this)).map(this.playSample.bind(this));
+    if (this.onbeat) {
+        this.onbeat();
     }
     this.beat++;
     if (this.beat >= this.intervals * this.beats) {
         this.beat = 0;
     }
-    if (this.state !== 'stopped') {
-        this.playBeatIn(this.getIntervalInMillis());
-    }
+    this.playBeatIn(this.getIntervalInMillis());
 };
 Player.prototype.shouldPlaySample = function (sample) {
     return sample && sample.beats && sample.beats[this.beat];

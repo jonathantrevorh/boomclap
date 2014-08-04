@@ -6,6 +6,10 @@ var audioContext = new window.AudioContext();
 function onDOMReady() {
     templates.loadTemplatesFromDOM();
     templates.goTo('index');
+    start();
+}
+
+function start() {
     setupWorker(gotStream);
 }
 
@@ -15,9 +19,11 @@ templates.on('player', (function () {
         load: function () {
             templates.hookups['record'].onclick = onRecordClick;
             templates.hookups['pad-grid'].onclick = onTogglePlaySample;
-            player.play();
+            templates.hookups['playpause'].onclick = onPlayPauseClick;
             player.onchange = redrawGrid;
             player.onbeat = onBeat;
+            player.onstatechange = onPlayerStateChange;
+            player.play();
             redrawGrid();
         },
         unload: function () {
@@ -30,12 +36,18 @@ templates.on('player', (function () {
     function onRecordClick() {
         templates.goTo('record');
     };
+    function onPlayPauseClick() {
+        player[player.isPlaying() ? 'pause' : 'play']();
+    };
     function onTogglePlaySample(event) {
         var target = event.target;
         var parent = target.parentElement;
         var sampleIndex = Array.prototype.indexOf.call(parent.parentElement.children, parent);
         var beatIndex = Array.prototype.indexOf.call(parent.children, target) - 1;
         player.toggleBeat(sampleIndex, beatIndex);
+    };
+    function onPlayerStateChange() {
+        templates.hookups['playpause'].innerHTML = player.isPlaying() ? '&#9616;&#9616; Pause' : '&#9658 Play';
     };
     function redrawGrid() {
         player.samples.map(function (sample, i) {
@@ -68,7 +80,7 @@ templates.on('record', (function () {
             onDrag(templates.hookups['right-handle'], moveWithDrag);
             toolChain.spool.onsample = onSample;
         },
-        onunload: function () {
+        unload: function () {
             toolChain.spool.onsample = null;
         }
     };
