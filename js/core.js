@@ -315,7 +315,7 @@ var DrawingPartial = {
     }
 };
 
-/** 
+/**
  * map/reduce partials and array util
  */
 function bucket(previousValue, currentValue, index, array) {

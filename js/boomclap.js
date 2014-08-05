@@ -47,7 +47,7 @@ templates.on('player', (function () {
         player.toggleBeat(sampleIndex, beatIndex);
     };
     function onPlayerStateChange() {
-        templates.hookups['playpause'].innerHTML = player.isPlaying() ? '&#9616;&#9616; Pause' : '&#9658 Play';
+        templates.hookups['playpause'].innerHTML = player.isPlaying() ? '&#9616;&#9616;' : '&#9658';
     };
     function redrawGrid() {
         player.samples.map(function (sample, i) {
