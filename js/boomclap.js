@@ -170,9 +170,11 @@ templates.on('edit-sample', (function () {
             templates.hookups['filter[cutoff]'].addEventListener('input', updateFilterCutoff);
             templates.hookups['filter[type]'].value = sample.filter.type;
             templates.hookups['filter[type]'].addEventListener('input', updateFilterType);
+            templates.hookups['play'].addEventListener('click', draw);
             sample.onchange = draw;
 
             templates.hookups['save'].addEventListener('click', save);
+            templates.hookups['delete'].addEventListener('click', remove);
 
             draw();
         },
@@ -197,10 +199,15 @@ templates.on('edit-sample', (function () {
         sample.filter.type = this.value;
     }
     function draw() {
-        drawSound(sample.getData(), canvas);
+        //drawSound(sample.getData(), canvas);
+        sample.play(audioContext.destination);
     }
     function save() {
         templates.goTo('player');
+    }
+    function remove() {
+        player.removeSample(sample.id);
+        save();
     }
 })());
 

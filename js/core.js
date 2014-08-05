@@ -112,8 +112,10 @@ Player.prototype.triggerChange = function () {
         this.onchange();
     }
 };
-Player.prototype.removeSample = function (i) {
-    this.samples.splice(i, 1);
+Player.prototype.removeSample = function (sampleId) {
+    this.samples = this.samples.filter(function (sample) {
+        return sample.id !== sampleId;
+    });
 };
 Player.prototype.play = function () {
     this.setState('playing');
