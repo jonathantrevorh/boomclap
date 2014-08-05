@@ -15,11 +15,13 @@ function start() {
 
 var player = new Player(140, 4, 4);
 templates.on('player', (function () {
+    var rawGridRow = null;
     var handlers = {
         load: function () {
             templates.hookups['record'].addEventListener('click', onRecordClick);
             templates.hookups['pad-grid'].addEventListener('click', onTogglePlaySample);
             templates.hookups['playpause'].addEventListener('click', onPlayPauseClick);
+            rawGridRow = templates.hookups['grid-row'].cloneNode(true);
             player.onchange = redrawGrid;
             player.onbeat = onBeat;
             player.onstatechange = onPlayerStateChange;
@@ -50,13 +52,21 @@ templates.on('player', (function () {
         templates.hookups['playpause'].innerHTML = player.isPlaying() ? '&#9616;&#9616;' : '&#9658';
     };
     function redrawGrid() {
+        var padGrid = templates.hookups['pad-grid'];
+        padGrid.innerHTML = '';
         player.samples.map(function (sample, i) {
-            var row = templates.hookups['pad-grid'].children[i];
-            row.children[0].innerText = sample.name;
+            var row = rawGridRow.cloneNode(true);
+            row.id = '';
+            row.name = sample.id;
+            var nameNode = row.children[0];
+            nameNode.innerText = sample.name;
             sample.beats.map(function (isOn, beat) {
                 row.children[beat+1].classList[isOn ? 'add' : 'remove']('active');
             });
+            padGrid.appendChild(row);
         });
+        var lastRow = rawGridRow.cloneNode(true);
+        padGrid.appendChild(lastRow);
     };
     function onBeat() {
         var beat = player.beat;
