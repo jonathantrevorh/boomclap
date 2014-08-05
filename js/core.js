@@ -86,18 +86,26 @@ function Player(bpm, beats, intervals) {
     this.timeout = null;
     this.beat = 0;
 
+    this.nextAutoId = 0;
+
     this.onchange = null;
     this.onbeat = null;
 }
 Player.prototype.registerSample = function (sample) {
     var buffer = audioContext.createBuffer(1, sample.length, audioContext.sampleRate);
     buffer.getChannelData(0).set(sample, 0);
-    var sampleBundle = {
-        data: buffer,
-        beats: []
-    };
+    var sampleBundle = new Sample(this.getNextId(), buffer);
     this.samples.push(sampleBundle);
     this.triggerChange();
+};
+Player.prototype.getSample = function (sampleId) {
+    var withId = this.samples.filter(function (sample) {
+        return sample.id === sampleId;
+    })[0];
+    return withId;
+};
+Player.prototype.getNextId = function () {
+    return this.nextAutoId++;
 };
 Player.prototype.triggerChange = function () {
     if (this.onchange) {
@@ -156,13 +164,81 @@ Player.prototype.toggleBeat = function (sampleIndex, beatIndex) {
     this.triggerChange();
 };
 Player.prototype.playSample = function (sample) {
-    var source = audioContext.createBufferSource();
-    source.buffer = sample.data;
-    source.connect(audioContext.destination);
-    source.start(0);
+    sample.play(audioContext.destination);
 };
 Player.prototype.getIntervalInMillis = function () {
     return 60 * 1000 / this.bpm / this.intervals;
+};
+
+function Sample(id, data) {
+    this._data = data;
+    this.id = id;
+    this._playbackRate = 1;
+
+    // proxy a bundle of internal properties and nodes
+    Object.defineProperty(this, 'pitch', {
+        get: function () {
+            return this._playbackRate;
+        }, set: function (value) {
+            var floatValue = Math.pow(2, parseInt(value));
+            this._playbackRate = floatValue;
+            this.triggerChange();
+        }
+    });
+    Object.defineProperty(this, 'gain', {
+        get: function () {
+            return this.nodes.gain.value;
+        }, set: function (value) {
+            var floatValue = parseFloat(value);
+            this.nodes.gain.value = floatValue;
+            this.triggerChange();
+        }
+    });
+    this.filter = {};
+    Object.defineProperty(this.filter, 'frequency', {
+        get: function () {
+            return this.filter.frequency.value;
+        }, set: function (value) {
+            this.filter.frequency.value = value;
+        }
+    });
+    Object.defineProperty(this.filter, 'type', {
+        get: function () {
+            return this.filter.type;
+        }, set: function (value) {
+            this.filter.type = value;
+        }
+    });
+
+    this.beats = [];
+
+    this.nodes = {};
+    this.nodes.gain = audioContext.createGain();
+    this.nodes.gain.value = 1;
+    this.nodes.filter = audioContext.createBiquadFilter();
+    this.nodes.type = 'lowpass';
+    this.nodes.frequency.value = 5000;
+}
+Sample.prototype.play = function (destination, givenTime) {
+    var time = givenTime || 0;
+    var source = this.getNewSourceNode();
+    wireUp([source, this.nodes.gain, destination]);
+    source.start(time);
+};
+Sample.prototype.getNewSourceNode = function () {
+    var source = audioContext.createBufferSource();
+    source.buffer = this._data;
+    source.playbackRate.value = this._playbackRate;
+    console.log('using playbackRate of ', source.playbackRate);
+    return source;
+};
+Sample.prototype.triggerChange = function () {
+    if (this.onchange) {
+        this.onchange();
+    }
+};
+Sample.prototype.getData = function () {
+    return this._data;
 };
 
 function onDrag(element, handler) {
