@@ -182,34 +182,37 @@ function Sample(id, data) {
         get: function () {
             return this._playbackRate;
         }, set: function (value) {
-            var floatValue = Math.pow(2, parseInt(value));
+            var floatValue = parseFloat(value);
             this._playbackRate = floatValue;
             this.triggerChange();
         }
     });
     Object.defineProperty(this, 'gain', {
         get: function () {
-            return this.nodes.gain.value;
+            return this.nodes.gain.gain.value;
         }, set: function (value) {
             var floatValue = parseFloat(value);
-            this.nodes.gain.value = floatValue;
+            this.nodes.gain.gain.value = floatValue;
             this.triggerChange();
         }
     });
     this.filter = {};
     Object.defineProperty(this.filter, 'frequency', {
         get: function () {
-            return this.filter.frequency.value;
-        }, set: function (value) {
-            this.filter.frequency.value = value;
-        }
+            return filter.frequency.value;
+        }.bind(this), set: function (value) {
+            this.nodes.filter.frequency.value = value;
+            this.triggerChange();
+        }.bind(this)
     });
     Object.defineProperty(this.filter, 'type', {
         get: function () {
-            return this.filter.type;
-        }, set: function (value) {
-            this.filter.type = value;
-        }
+            return filter.type;
+        }.bind(this), set: function (value) {
+            var intValue = parseInt(value);
+            this.nodes.filter.type = intValue;
+            this.triggerChange();
+        }.bind(this)
     });
 
     this.beats = [];
