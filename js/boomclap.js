@@ -166,6 +166,10 @@ templates.on('edit-sample', (function () {
             templates.hookups['pitch'].addEventListener('input', updatePitch);
             templates.hookups['gain'].value = sample.gain;
             templates.hookups['gain'].addEventListener('input', updateGain);
+            templates.hookups['filter[cutoff]'].value = sample.filter.frequency;
+            templates.hookups['filter[cutoff]'].addEventListener('input', updateFilterCutoff);
+            templates.hookups['filter[type]'].value = sample.filter.type;
+            templates.hookups['filter[type]'].addEventListener('input', updateFilterType);
             sample.onchange = draw;
 
             templates.hookups['save'].addEventListener('click', save);
@@ -185,6 +189,12 @@ templates.on('edit-sample', (function () {
     }
     function updateGain() {
         sample.gain = this.value;
+    }
+    function updateFilterCutoff() {
+        sample.filter.frequency = this.value;
+    }
+    function updateFilterType() {
+        sample.filter.type = this.value;
     }
     function draw() {
         drawSound(sample.getData(), canvas);
