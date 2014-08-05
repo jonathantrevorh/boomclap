@@ -23,9 +23,17 @@ button:disabled {
     box-shadow-color: #999;
 }
 
+button:focus {
+    color: white;
+    background-color: grey;
+}
+
+button:focus, button:not(:disabled):hover {
+    text-decoration: underline;
+}
+
 button:not(:disabled):hover {
     cursor: pointer;
-    text-decoration: underline;
 }
 
 button:disabled:hover {
@@ -38,14 +46,17 @@ button:not(:disabled):active {
     box-shadow: none;
 }
 
+input {
+    outline-width: 0;
+}
+
 input[type="range"] {
     vertical-align: middle;
 }
 
 input[type="text"], input[type="color"], input[type="email"], input[type="number"], input[type="password"], input[type="tel"], input[type="url"] {
-    border: 1px solid black;
+    border: 1px solid lightgrey;
     padding: 0.4em;
-    outline-width: 0;
 }
 
 input[type="text"]:focus, input[type="color"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="tel"]:focus, input[type="url"]:focus {
