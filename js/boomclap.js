@@ -160,6 +160,7 @@ templates.on('edit-sample', (function () {
                 return;
             }
             canvas = templates.hookups['amplitude-graph'];
+            templates.hookups['name'].addEventListener('input', updateName);
             templates.hookups['pitch'].addEventListener('input', updatePitch);
             templates.hookups['gain'].addEventListener('input', updateGain);
             sample.onchange = draw;
@@ -173,6 +174,9 @@ templates.on('edit-sample', (function () {
         }
     };
     return handlers;
+    function updateName() {
+        sample.name = this.value;
+    }
     function updatePitch() {
         sample.pitch = this.value;
     }

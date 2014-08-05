@@ -173,7 +173,9 @@ Player.prototype.getIntervalInMillis = function () {
 function Sample(id, data) {
     this._data = data;
     this.id = id;
+    this.name = 'undefined';
     this._playbackRate = 1;
+    this.nodes = {};
 
     // proxy a bundle of internal properties and nodes
     Object.defineProperty(this, 'pitch', {
@@ -212,24 +214,25 @@ function Sample(id, data) {
 
     this.beats = [];
 
-    this.nodes = {};
-    this.nodes.gain = audioContext.createGain();
-    this.nodes.gain.value = 1;
-    this.nodes.filter = audioContext.createBiquadFilter();
-    this.nodes.type = 'lowpass';
-    this.nodes.frequency.value = 5000;
+    var gain = audioContext.createGain();
+    gain.value = 1;
+    this.nodes.gain = gain;
+
+    var filter = audioContext.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 5000;
+    this.nodes.filter = filter;
 }
 Sample.prototype.play = function (destination, givenTime) {
     var time = givenTime || 0;
     var source = this.getNewSourceNode();
-    wireUp([source, this.nodes.gain, destination]);
+    wireUp([source, this.nodes.gain, this.nodes.filter, destination]);
     source.start(time);
 };
 Sample.prototype.getNewSourceNode = function () {
     var source = audioContext.createBufferSource();
     source.buffer = this._data;
     source.playbackRate.value = this._playbackRate;
-    console.log('using playbackRate of ', source.playbackRate);
     return source;
 };
 Sample.prototype.triggerChange = function () {
