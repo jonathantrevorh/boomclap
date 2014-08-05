@@ -60,6 +60,7 @@ templates.on('player', (function () {
             row.name = sample.id;
             var nameNode = row.children[0];
             nameNode.innerText = sample.name;
+            nameNode.addEventListener('click', onNameNodeClick);
             sample.beats.map(function (isOn, beat) {
                 row.children[beat+1].classList[isOn ? 'add' : 'remove']('active');
             });
@@ -74,6 +75,11 @@ templates.on('player', (function () {
         for (var i = 1 ; i < heads.length ; i++) {
             heads[i].classList[i == beat+1 ? 'add' : 'remove']('active');
         }
+    };
+    function onNameNodeClick() {
+        var row = this.parentElement;
+        var sampleId = row.name;
+        templates.goTo('edit-sample', {sampleId: sampleId});
     };
 })());
 
@@ -139,6 +145,46 @@ templates.on('record', (function () {
             drawSound(samples, templates.hookups['amplitude-graph'], DrawingPartial.Amplitude);
         }
     };
+})());
+
+templates.on('edit-sample', (function () {
+    var sample = null;
+    var canvas = null;
+    var handlers = {
+        load: function (data) {
+            sample = player.getSample(data.sampleId);
+            if (!sample) {
+                // flash error
+                console.error('no such sample ' + sampleId);
+                templates.goTo('player');
+                return;
+            }
+            canvas = templates.hookups['amplitude-graph'];
+            templates.hookups['pitch'].addEventListener('input', updatePitch);
+            templates.hookups['gain'].addEventListener('input', updateGain);
+            sample.onchange = draw;
+
+            templates.hookups['save'].addEventListener('click', save);
+
+            draw();
+        },
+        unload: function () {
+            sample.onchange = null;
+        }
+    };
+    return handlers;
+    function updatePitch() {
+        sample.pitch = this.value;
+    }
+    function updateGain() {
+        sample.gain = this.value;
+    }
+    function draw() {
+        drawSound(sample.getData(), canvas);
+    }
+    function save() {
+        templates.goTo('player');
+    }
 })());
 
 var toolChain = {
