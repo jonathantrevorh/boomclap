@@ -17,9 +17,9 @@ var player = new Player(140, 4, 4);
 templates.on('player', (function () {
     var handlers = {
         load: function () {
-            templates.hookups['record'].onclick = onRecordClick;
-            templates.hookups['pad-grid'].onclick = onTogglePlaySample;
-            templates.hookups['playpause'].onclick = onPlayPauseClick;
+            templates.hookups['record'].addEventListener('click', onRecordClick);
+            templates.hookups['pad-grid'].addEventListener('click', onTogglePlaySample);
+            templates.hookups['playpause'].addEventListener('click', onPlayPauseClick);
             player.onchange = redrawGrid;
             player.onbeat = onBeat;
             player.onstatechange = onPlayerStateChange;
@@ -73,9 +73,9 @@ templates.on('record', (function () {
     var handlers = {
         load: function () {
             setFrozen(false);
-            templates.hookups['freeze'].onclick = onFreezeClick;
-            templates.hookups['save'].onclick = onSaveClick;
-            templates.hookups['cancel'].onclick = exit;
+            templates.hookups['freeze'].addEventListener('click', onFreezeClick);
+            templates.hookups['save'].addEventListener('click', onSaveClick);
+            templates.hookups['cancel'].addEventListener('click', exit);
             onDrag(templates.hookups['left-handle'], moveWithDrag);
             onDrag(templates.hookups['right-handle'], moveWithDrag);
             toolChain.spool.onsample = onSample;
@@ -140,7 +140,7 @@ function gotStream(stream) {
     var source = audioContext.createMediaStreamSource(stream);
 
     var biquadFilter = audioContext.createBiquadFilter();
-    biquadFilter.type = BiquadFilterNode.LOWPASS;
+    biquadFilter.type = 'lowpass';
     biquadFilter.frequency.value = 5000;
 
     /*var gainNode = audioContext.createGainNode();

@@ -170,21 +170,23 @@ function onDrag(element, handler) {
     var boundHandler = handler.bind(element);
     var downEvent = null;
     var previousEvent = null;
-    element.onmousedown = function (event) {
+    element.addEventListener('mousedown', function (event) {
         isBeingMoved = true;
         previousEvent = downEvent = event;
-    };
-    element.onmousemove = function (event) {
+    });
+    element.addEventListener('mousemove', function (event) {
         if (!isBeingMoved) {
             return;
         }
         var oldPreviousEvent = previousEvent;
         previousEvent = event;
         boundHandler(event, oldPreviousEvent);
-    };
-    element.onmouseup = element.onmouseleave = function () {
+    });
+    element.addEventListener('mouseup', onOutOrUp);
+    element.addEventListener('mouseleave', onOutOrUp);
+    function onOutOrUp() {
         isBeingMoved = false;
-    };
+    }
 }
 
 var setupWorker = (function () {
