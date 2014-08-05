@@ -358,7 +358,8 @@ HitDetector.prototype.triggerHit = function () {
 /**
  * visualization functions
  */
-function drawSound(sample, canvas, pointDrawingPartial) {
+function drawSound(sample, canvas, givenPointDrawingPartial) {
+    var pointDrawingPartial = givenPointDrawingPartial || DrawingPartial.Amplitude;
     var context = canvas.getContext('2d');
     canvas.width = 1000;
     canvas.height = 250;
