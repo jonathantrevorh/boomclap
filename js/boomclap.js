@@ -162,14 +162,19 @@ templates.on('edit-sample', (function () {
             canvas = templates.hookups['amplitude-graph'];
             templates.hookups['name'].value = sample.name;
             templates.hookups['name'].addEventListener('input', updateName);
+            templates.hookups['name'].addEventListener('keyup', updateName);
             templates.hookups['pitch'].value = sample.pitch;
             templates.hookups['pitch'].addEventListener('input', updatePitch);
+            templates.hookups['pitch'].addEventListener('keyup', updatePitch);
             templates.hookups['gain'].value = sample.gain;
             templates.hookups['gain'].addEventListener('input', updateGain);
+            templates.hookups['gain'].addEventListener('keyup', updateGain);
             templates.hookups['filter[cutoff]'].value = sample.filter.frequency;
             templates.hookups['filter[cutoff]'].addEventListener('input', updateFilterCutoff);
+            templates.hookups['filter[cutoff]'].addEventListener('keyup', updateFilterCutoff);
             templates.hookups['filter[type]'].value = sample.filter.type;
             templates.hookups['filter[type]'].addEventListener('input', updateFilterType);
+            templates.hookups['filter[type]'].addEventListener('keyup', updateFilterType);
             templates.hookups['play'].addEventListener('click', draw);
             sample.onchange = draw;
 
@@ -199,7 +204,6 @@ templates.on('edit-sample', (function () {
         sample.filter.type = this.value;
     }
     function draw() {
-        //drawSound(sample.getData(), canvas);
         sample.play(audioContext.destination);
     }
     function save() {

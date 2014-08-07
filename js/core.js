@@ -276,9 +276,9 @@ function onDrag(element, handler) {
 var setupWorker = (function () {
     // ensure getUserMedia is only called once
     var requestSent = false;
-    return function (callback) {
+    return function (successCallback, errorCallback) {
         if (!requestSent) {
-            navigator.getUserMedia({audio: true}, callback);
+            navigator.getUserMedia({audio: true}, successCallback, errorCallback);
             requestSent = true;
         }
     }

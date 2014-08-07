@@ -20,7 +20,7 @@
     <table class="grid">
         <thead>
             <tr id="pad-head">
-                <th>𝅘𝅥𝅮</th>
+                <th>&#9835;</th>
                 <th>1</th>
                 <th>e</th>
                 <th>&amp;</th>
@@ -84,14 +84,18 @@
 <script type="text/html" id="edit-sample">
 <canvas id="amplitude-graph" class="graph hidden"></canvas>
 <label>Name <input id="name" type="text" /></label>
-<label>Gain <input id="gain" type="range" min="0.25" max="4.0" step="0.25" value="1" /></label>
-<label>Pitch <input id="pitch" type="range" min="0.1" max="5" step="0.1" value="1" /></label>
-<label>Cutoff <input id="filter[cutoff]" type="range" min="50" max="9000" step="1" value="5000" /></label>
-<label>Filter <select id="filter[type]">
-    <option value="">None</option>
-    <option value="lowpass">Lowpass</option>
-    <option value="highpass">Highpass</option>
-</select></label>
+<div>
+    <label>Gain <input id="gain" type="range" min="0.25" max="10.0" step="0.25" value="1" /></label>
+    <label>Pitch <input id="pitch" type="range" min="0.1" max="5" step="0.1" value="1" /></label>
+</div>
+<div>
+    <label>Cutoff <input id="filter[cutoff]" type="range" min="100" max="9000" step="100" value="5000" /></label>
+    <label>Filter <select id="filter[type]">
+        <option value="">None</option>
+        <option value="lowpass">Lowpass</option>
+        <option value="highpass">Highpass</option>
+    </select></label>
+</div>
 <div class="clearfix">
     <div class="pull-left">
         <button id="play">Play</button>
