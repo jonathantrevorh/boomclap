@@ -6,12 +6,52 @@ var audioContext = new window.AudioContext();
 function onDOMReady() {
     templates.loadTemplatesFromDOM();
     templates.goTo('index');
-    start();
 }
 
-function start() {
-    setupWorker(gotStream);
-}
+var toolChain = {
+    spool: null,
+};
+
+templates.on('index', (function () {
+    var shaming = null;
+    var handlers = {
+        load: function () {
+            shaming = templates.hookups['public-shaming'];
+            templates.hookups['start-button'].addEventListener('click', start);
+            setupWorker(gotStream, didNotGetStream);
+        }, unload: function () {
+            ;
+        }
+    };
+    return handlers;
+    function didNotGetStream() {
+        shaming.classList.remove('hidden');
+    }
+    function start() {
+        setupWorker(gotStream, didNotGetStream);
+    }
+    function gotStream(stream) {
+        templates.goTo('player');
+        var source = audioContext.createMediaStreamSource(stream);
+
+        var biquadFilter = audioContext.createBiquadFilter();
+        biquadFilter.type = 'lowpass';
+        biquadFilter.frequency.value = 5000;
+
+        /*var gainNode = audioContext.createGainNode();
+        var volumeSlider = hookups['volume'];
+        volumeSlider.value = 100*gainNode.gain.value;
+        volumeSlider.onchange = function () {
+            gainNode.gain.value = volumeSlider.value / 100;
+        };*/
+
+        var input = wireUp([source, biquadFilter]);
+
+        toolChain.spool = new SampleSpooler(input, audioContext, 32, 2048);
+
+        wireUp([input, toolChain.spool.processor, audioContext.destination]);
+    }
+})());
 
 var player = new Player(140, 4, 4);
 templates.on('player', (function () {
@@ -214,29 +254,3 @@ templates.on('edit-sample', (function () {
         save();
     }
 })());
-
-var toolChain = {
-    spool: null,
-};
-
-function gotStream(stream) {
-    templates.goTo('player');
-    var source = audioContext.createMediaStreamSource(stream);
-
-    var biquadFilter = audioContext.createBiquadFilter();
-    biquadFilter.type = 'lowpass';
-    biquadFilter.frequency.value = 5000;
-
-    /*var gainNode = audioContext.createGainNode();
-    var volumeSlider = hookups['volume'];
-    volumeSlider.value = 100*gainNode.gain.value;
-    volumeSlider.onchange = function () {
-        gainNode.gain.value = volumeSlider.value / 100;
-    };*/
-
-    var input = wireUp([source, biquadFilter]);
-
-    toolChain.spool = new SampleSpooler(input, audioContext, 32, 2048);
-
-    wireUp([input, toolChain.spool.processor, audioContext.destination]);
-}
