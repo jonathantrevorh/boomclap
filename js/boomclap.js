@@ -3,10 +3,10 @@
 var templates = new Templates();
 var audioContext = new window.AudioContext();
 
-function onDOMReady() {
+callbacks.onDOMReady.push(function () {
     templates.loadTemplatesFromDOM();
     templates.goTo('index');
-}
+});
 
 var toolChain = {
     spool: null,

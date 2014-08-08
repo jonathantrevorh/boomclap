@@ -3,6 +3,11 @@
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
+var callbacks = {
+    onDOMReady: [],
+    onContentReady: []
+};
+
 /**
  * Calls onDOMReady when html is loaded, and onContentReady when everything is ready
  * TODO accept multiple callbacks
@@ -10,10 +15,17 @@ navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 document.onreadystatechange = function (e) {
     var state = document.readyState;
     if (state === 'interactive') {
-        onDOMReady();
+        for (var i=0 ; i < callbacks.onDOMReady.length ; i++) {
+            var cb = callbacks.onDOMReady[i];
+            cb();
+        }
     } else if (state === 'complete') {
         if (typeof onContentReady !== 'undefined') {
             onContentReady();
+            for (var i=0 ; i < callbacks.onContentReady.length ; i++) {
+                var cb = callbacks.onContentReady[i];
+                cb();
+            }
         }
     }
 };
