@@ -30,6 +30,20 @@ document.onreadystatechange = function (e) {
     }
 };
 
+// steal this id generating function from SO, so it isn't done in smaller, stupider places
+// http://stackoverflow.com/questions/1349404/generate-a-string-of-5-random-characters-in-javascript
+function makeid(length) {
+    length = length || 6;
+    var text = "";
+    var corpus = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (var i = 0 ; i < length ; i++) {
+        text += corpus.charAt(Math.floor(Math.random() * corpus.length));
+    }
+
+    return text;
+}
+
 function getTemplates() {
 }
 
@@ -98,15 +112,13 @@ function Player(bpm, beats, intervals) {
     this.timeout = null;
     this.beat = 0;
 
-    this.nextAutoId = 0;
-
     this.onchange = null;
     this.onbeat = null;
 }
 Player.prototype.registerSample = function (sample) {
     var buffer = audioContext.createBuffer(1, sample.length, audioContext.sampleRate);
     buffer.getChannelData(0).set(sample, 0);
-    var sampleBundle = new Sample(this.getNextId(), buffer);
+    var sampleBundle = new Sample(makeid(), buffer);
     this.samples.push(sampleBundle);
     this.triggerChange();
 };
@@ -116,13 +128,13 @@ Player.prototype.getSample = function (sampleId) {
     })[0];
     return withId;
 };
-Player.prototype.getNextId = function () {
-    return this.nextAutoId++;
-};
 Player.prototype.triggerChange = function () {
     if (this.onchange) {
         this.onchange();
     }
+};
+Player.prototype.addSample = function (sample) {
+    this.samples.push(sample);
 };
 Player.prototype.removeSample = function (sampleId) {
     this.samples = this.samples.filter(function (sample) {
@@ -260,6 +272,16 @@ Sample.prototype.triggerChange = function () {
 Sample.prototype.getData = function () {
     return this._data;
 };
+Sample.prototype.clone = function () {
+    var clone = new Sample(makeid(), this._data);
+    clone.name = this.name + '!';
+    clone.pitch = this.pitch;
+    clone.gain = this.gain;
+    clone.filter.frequency = this.filter.frequency;
+    clone.filter.type = this.filter.type;
+    return clone;
+};
+
 
 function onDrag(element, handler) {
     var isBeingMoved = false;

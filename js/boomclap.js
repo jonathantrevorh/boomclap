@@ -220,6 +220,7 @@ templates.on('edit-sample', (function () {
 
             templates.hookups['save'].addEventListener('click', save);
             templates.hookups['delete'].addEventListener('click', remove);
+            templates.hookups['duplicate'].addEventListener('click', duplicate);
 
             draw();
         },
@@ -251,6 +252,11 @@ templates.on('edit-sample', (function () {
     }
     function remove() {
         player.removeSample(sample.id);
+        save();
+    }
+    function duplicate() {
+        var clone = sample.clone();
+        player.addSample(clone);
         save();
     }
 })());
