@@ -61,6 +61,8 @@ templates.on('player', (function () {
             templates.hookups['record'].addEventListener('click', onRecordClick);
             templates.hookups['pad-grid'].addEventListener('click', onTogglePlaySample);
             templates.hookups['playpause'].addEventListener('click', onPlayPauseClick);
+            templates.hookups['bpm'].value = player.bpm;
+            templates.hookups['bpm'].addEventListener('input', updateBPM);
             rawGridRow = templates.hookups['grid-row'].cloneNode(true);
             player.onchange = redrawGrid;
             player.onbeat = onBeat;
@@ -121,6 +123,9 @@ templates.on('player', (function () {
         var sampleId = row.name;
         templates.goTo('edit-sample', {sampleId: sampleId});
     };
+    function updateBPM() {
+        player.bpm = parseInt(this.value);
+    }
 })());
 
 templates.on('record', (function () {
