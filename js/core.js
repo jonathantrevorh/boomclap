@@ -227,7 +227,8 @@ function Sample(id, data) {
         get: function () {
             return filter.frequency.value;
         }.bind(this), set: function (value) {
-            this.nodes.filter.frequency.value = value;
+            var intValue = parseInt(value);
+            this.nodes.filter.frequency.value = intValue;
             this.triggerChange();
         }.bind(this)
     });

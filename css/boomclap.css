@@ -47,6 +47,9 @@ button:not(:disabled):active {
 }
 
 label {
+    display: inline-block;
+    min-width: 5em;
+    text-align: right;
     white-space: nowrap;
 }
 
@@ -67,6 +70,10 @@ input[type="text"], input[type="color"], input[type="email"], input[type="number
 
 input[type="text"]:focus, input[type="color"]:focus, input[type="email"]:focus, input[type="number"]:focus, input[type="password"]:focus, input[type="tel"]:focus, input[type="url"]:focus {
     border-color: grey;
+}
+
+input.input-sm {
+    width: 5em;
 }
 
 .hidden {

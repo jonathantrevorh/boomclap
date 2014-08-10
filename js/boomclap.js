@@ -205,21 +205,11 @@ templates.on('edit-sample', (function () {
                 return;
             }
             canvas = templates.hookups['amplitude-graph'];
-            templates.hookups['name'].value = sample.name;
-            templates.hookups['name'].addEventListener('input', updateName);
-            templates.hookups['name'].addEventListener('keyup', updateName);
-            templates.hookups['pitch'].value = sample.pitch;
-            templates.hookups['pitch'].addEventListener('input', updatePitch);
-            templates.hookups['pitch'].addEventListener('keyup', updatePitch);
-            templates.hookups['gain'].value = sample.gain;
-            templates.hookups['gain'].addEventListener('input', updateGain);
-            templates.hookups['gain'].addEventListener('keyup', updateGain);
-            templates.hookups['filter[cutoff]'].value = sample.filter.frequency;
-            templates.hookups['filter[cutoff]'].addEventListener('input', updateFilterCutoff);
-            templates.hookups['filter[cutoff]'].addEventListener('keyup', updateFilterCutoff);
-            templates.hookups['filter[type]'].value = sample.filter.type;
-            templates.hookups['filter[type]'].addEventListener('input', updateFilterType);
-            templates.hookups['filter[type]'].addEventListener('keyup', updateFilterType);
+            bindInput(templates.hookups['name'], sample, 'name');
+            bindInput(templates.hookups['pitch'], sample, 'pitch');
+            bindInput(templates.hookups['gain'], sample, 'gain');
+            bindInput(templates.hookups['filter[cutoff]'], sample.filter, 'frequency');
+            bindInput(templates.hookups['filter[type]'], sample.filter, 'type');
             templates.hookups['play'].addEventListener('click', draw);
             sample.onchange = draw;
 
@@ -234,20 +224,16 @@ templates.on('edit-sample', (function () {
         }
     };
     return handlers;
-    function updateName() {
-        sample.name = this.value;
+    function bindInput(element, object, property) {
+        element.value = object[property];
+        var handler = partialUpdater(object, property);
+        element.addEventListener('input', handler);
+        element.addEventListener('keyup', handler);
     }
-    function updatePitch() {
-        sample.pitch = this.value;
-    }
-    function updateGain() {
-        sample.gain = this.value;
-    }
-    function updateFilterCutoff() {
-        sample.filter.frequency = this.value;
-    }
-    function updateFilterType() {
-        sample.filter.type = this.value;
+    function partialUpdater(object, property) {
+        return function () {
+            object[property] = this.value;
+        };
     }
     function draw() {
         sample.play(audioContext.destination);
