@@ -200,16 +200,16 @@ function Sample(id, data) {
     this._data = data;
     this.id = id;
     this.name = 'undefined';
-    this._playbackRate = 1;
+    this._pitch = 1;
     this.nodes = {};
 
     // proxy a bundle of internal properties and nodes
     Object.defineProperty(this, 'pitch', {
         get: function () {
-            return this._playbackRate;
+            return this._pitch;
         }, set: function (value) {
-            var floatValue = parseFloat(value);
-            this._playbackRate = floatValue;
+            var intValue = parseInt(value);
+            this._pitch = intValue;
             this.triggerChange();
         }
     });
@@ -262,7 +262,8 @@ Sample.prototype.play = function (destination, givenTime) {
 Sample.prototype.getNewSourceNode = function () {
     var source = audioContext.createBufferSource();
     source.buffer = this._data;
-    source.playbackRate.value = this._playbackRate;
+    var playbackRate = Math.pow(Math.pow(2, 1/12), this._pitch-1);
+    source.playbackRate.value = playbackRate;
     return source;
 };
 Sample.prototype.triggerChange = function () {
