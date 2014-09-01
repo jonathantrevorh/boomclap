@@ -130,6 +130,8 @@ table.grid td.active {
 }
 
 table.grid td:first-child {
+    color: blue;
+    text-decoration: underline;
     width: 15%;
 }
 
