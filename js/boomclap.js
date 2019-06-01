@@ -164,7 +164,7 @@ templates.on('record', (function () {
             maxWidth -= children[i].offsetWidth;
         }
         maxWidth += this.offsetWidth;
-        var movement = previousEvent.screenX - event.screenX;
+        var movement = previousEvent.pageX - event.pageX;
         var newWidth = this.offsetWidth + (this.id === 'left-handle' ? -1 : 1) * movement;
         var newWidth = Math.min(Math.max(0, newWidth), maxWidth);
         this.style.width = newWidth;
