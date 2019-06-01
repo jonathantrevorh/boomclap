@@ -1,2 +1,0 @@
-#!/bin/bash
-rsync -arvz --del --exclude-from '.uploadignore' ./* jhunsucker@codef.in:/opt/boomclap/
