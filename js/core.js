@@ -289,11 +289,13 @@ function onDrag(element, handler) {
     var boundHandler = handler.bind(element);
     var downEvent = null;
     var previousEvent = null;
-    element.addEventListener('mousedown', function (event) {
+
+    element.addEventListener('touchstart', function (event) {
         isBeingMoved = true;
         previousEvent = downEvent = event;
     });
-    element.addEventListener('mousemove', function (event) {
+
+    element.addEventListener('touchmove', function (event) {
         if (!isBeingMoved) {
             return;
         }
@@ -301,11 +303,10 @@ function onDrag(element, handler) {
         previousEvent = event;
         boundHandler(event, oldPreviousEvent);
     });
-    element.addEventListener('mouseup', onOutOrUp);
-    element.addEventListener('mouseleave', onOutOrUp);
-    function onOutOrUp() {
+
+    element.addEventListener('touchend', function (event) {
         isBeingMoved = false;
-    }
+    });
 }
 
 var setupWorker = (function () {
