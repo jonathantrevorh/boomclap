@@ -1,7 +1,6 @@
 'use strict';
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia;
 
 var callbacks = {
     onDOMReady: [],
@@ -314,7 +313,7 @@ var setupWorker = (function () {
     var requestSent = false;
     return function (successCallback, errorCallback) {
         if (!requestSent) {
-            navigator.getUserMedia({audio: true}, successCallback, errorCallback);
+            navigator.mediaDevices.getUserMedia({audio: true}).then(successCallback, errorCallback);
             requestSent = true;
         }
     }
