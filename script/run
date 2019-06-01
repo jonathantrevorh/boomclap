@@ -1,0 +1,9 @@
+#!/bin/bash -e
+BIND="0.0.0.0"
+PORT="23459"
+
+# in background, wait a second and open browser tab
+sleep 1 && open "http://"$BIND":"$PORT &
+
+# spin up https server at host and port
+python ./script/server.py $BIND $PORT
