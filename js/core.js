@@ -290,23 +290,33 @@ function onDrag(element, handler) {
     var downEvent = null;
     var previousEvent = null;
 
-    element.addEventListener('touchstart', function (event) {
+    var begin = function (event) {
+        event.preventDefault();
         isBeingMoved = true;
         previousEvent = downEvent = event;
-    });
+    };
 
-    element.addEventListener('touchmove', function (event) {
+    var move = function (event) {
+        event.preventDefault();
         if (!isBeingMoved) {
             return;
         }
         var oldPreviousEvent = previousEvent;
         previousEvent = event;
         boundHandler(event, oldPreviousEvent);
-    });
+    };
 
-    element.addEventListener('touchend', function (event) {
+    var end = function (event) {
+        event.preventDefault();
         isBeingMoved = false;
-    });
+    };
+
+    element.addEventListener('touchstart', begin);
+    element.addEventListener('mousedown', begin);
+    element.addEventListener('touchmove', move);
+    element.addEventListener('mousemove', move);
+    element.addEventListener('touchend', end);
+    element.addEventListener('mouseup', end);
 }
 
 var setupWorker = (function () {
